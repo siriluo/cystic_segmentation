@@ -1,7 +1,48 @@
+# Byte-compiled / cache
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtualenvs and secrets
+.venv/
+venv/
+.env
+.env.*
+
+# Notebooks / editor junk
 .ipynb_checkpoints/
-.~*.ipynb
+.~*
+
+# Weights, videos, and local data (PHI / large binaries)
 *.pth
+*.pt
 *.mp4
-data/
+*.MP4
+*.avi
+*.mkv
+*.zip
+*.filepart
+*.part
+data/*
+!data/README.md
+outputs/
+
+# Cluster logs
+**/slurm_*.out
+**/slurm_*.err
+
+# Surgical frames and galleries (metrics and curves stay tracked)
+experiments/processed_previews/
+experiments/report/*.pdf
+experiments/**/gt_previews/
+experiments/**/gt_previews_missing_ducts/
+experiments/**/val_overlays/
+experiments/**/test_overlays/
+experiments/**/val_result_*.png
+
+# OS
+.DS_Store

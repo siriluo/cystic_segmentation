@@ -1,0 +1,16 @@
+# Training defaults for data/processed
+model: deeplabv3_resnet50
+num_classes: 8
+image_size: [512, 512]
+batch_size: 16
+epochs: 50
+learning_rate: 1.0e-4
+weight_decay: 1.0e-4
+val_ratio: 0.15
+test_ratio: 0.15
+seed: 42
+split_unit: case
+early_stopping_patience: 10
+data_root: data/processed
+experiment_dir: experiments/train_test
+class_weights: true

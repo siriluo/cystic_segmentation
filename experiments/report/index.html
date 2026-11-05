@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cystic landmark segmentation — project report</title>
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --paper: #fffcf7;
+      --ink: #1c1917;
+      --muted: #57534e;
+      --line: #d6d3d1;
+      --accent: #9f1239;
+      --good: #166534;
+      --bad: #9f1239;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+    header.hero {
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.75rem;
+    }
+    .kicker { letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.72rem; color: var(--muted); font-family: system-ui, sans-serif; }
+    h1 { font-size: 2rem; line-height: 1.2; margin: 0.35rem 0 0.6rem; font-weight: 650; }
+    h2 { font-size: 1.35rem; margin: 2.4rem 0 0.7rem; border-top: 1px solid var(--line); padding-top: 1.4rem; }
+    h3 { font-size: 1.05rem; margin: 1.4rem 0 0.45rem; }
+    p, li { font-size: 1.02rem; }
+    .lede { font-size: 1.12rem; color: var(--muted); }
+    nav.toc { background: var(--paper); border: 1px solid var(--line); padding: 0.9rem 1.1rem; margin: 1.2rem 0 1.8rem; }
+    nav.toc a { color: var(--ink); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+    nav.toc ol { margin: 0.3rem 0 0; padding-left: 1.2rem; }
+    table { width: 100%; border-collapse: collapse; font-family: system-ui, sans-serif; font-size: 0.88rem; margin: 0.8rem 0 1.2rem; }
+    th, td { border-bottom: 1px solid var(--line); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+    th { font-weight: 600; background: #efebe5; }
+    td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+    td.bad { color: var(--bad); font-weight: 600; }
+    td.good { color: var(--good); font-weight: 600; }
+    figure { margin: 1.1rem 0 1.4rem; }
+    figure img { width: 100%; height: auto; border: 1px solid var(--line); background: #111; }
+    figcaption { font-family: system-ui, sans-serif; font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin: 1rem 0 1.3rem; }
+    .stat { background: var(--paper); border: 1px solid var(--line); padding: 0.7rem 0.8rem; }
+    .stat b { display: block; font-size: 1.35rem; font-family: system-ui, sans-serif; }
+    .stat span { font-family: system-ui, sans-serif; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .bar { height: 10px; background: #e7e5e4; margin: 0.25rem 0 0.7rem; }
+    .bar > i { display: block; height: 100%; background: #44403c; }
+    .callout { border-left: 3px solid var(--accent); padding: 0.2rem 0 0.2rem 0.9rem; margin: 1rem 0; color: var(--muted); }
+    code, .path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84em; }
+    footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
+    @media (max-width: 720px) {
+      .stats, .grid2 { grid-template-columns: 1fr 1fr; }
+      h1 { font-size: 1.55rem; }
+    }
+    @media print {
+      body { background: #fff; }
+      .wrap { max-width: none; padding: 0; }
+      nav.toc { break-after: avoid; }
+      figure { break-inside: avoid; }
+      h2 { break-after: avoid; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="kicker">Laparoscopic cholecystectomy · NCSA DeltaAI · 1–2 September 2026</div>
+      <h1>Semantic segmentation of Calot’s triangle landmarks</h1>
+      <p class="lede">Data cleanup, dataset audit, DeepLabV3 experiments, and video overlay for common bile duct vs cystic duct identification — with the clinical goal of reducing bile duct injury.</p>
+    </header>
+
+    <nav class="toc">
+      <div class="kicker">Contents</div>
+      <ol>
+        <li><a href="#motivation">Clinical motivation</a></li>
+        <li><a href="#preprocess">Data preprocessing</a></li>
+        <li><a href="#explore">Dataset exploration</a></li>
+        <li><a href="#model">Model and training setup</a></li>
+        <li><a href="#results">Experiment results</a></li>
+        <li><a href="#viz">Visualization</a></li>
+        <li><a href="#conclude">Conclusions</a></li>
+        <li><a href="#future">Future work</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="motivation">1. Clinical motivation</h2>
+    <p>Bile duct injury (BDI) during laparoscopic cholecystectomy has stayed near <strong>0.4%</strong> for a decade. About <strong>60%</strong> of major injuries are Stewart–Way class III events: the common bile duct (CBD) is mistaken for the cystic duct (CD) and transected. This project trains a segmentation model to highlight gallbladder-region anatomy on laparoscopic video (white light and ICG fluorescence) so that those two ducts can be distinguished in the field.</p>
+    <p>The objects that matter most are <strong>CBD vs cystic duct</strong>. Other landmarks (gallbladder, liver edge, instrument, cystic artery, Rouvière’s sulcus) are useful context but were treated as expendable when we later specialized the task.</p>
+
+    <h2 id="preprocess">2. Data preprocessing</h2>
+    <p>The source archive <span class="path">AI project case pictures.zip</span> is ~23&nbsp;GB, almost entirely videos and office files. Only still images plus VIA JSON/TXT annotations were unpacked (~195&nbsp;MB, 967 files) into <span class="path">data/raw_import/</span>. Script: <span class="path">scripts/organize_dataset.py</span>.</p>
+
+    <h3>What was kept vs dropped</h3>
+    <table>
+      <thead>
+        <tr><th>Filter</th><th class="n">Count</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Valid image–annotation pairs in nested folders</td><td class="n">615</td></tr>
+        <tr><td>Exact duplicate frames (SHA-1 of image bytes)</td><td class="n">207</td></tr>
+        <tr><td>Annotation with no raw frame in the folder</td><td class="n">350</td></tr>
+        <tr><td>Unreadable JSON</td><td class="n">2</td></tr>
+        <tr><td><strong>Unique frames kept</strong></td><td class="n"><strong>408</strong></td></tr>
+        <tr><td><strong>Patients</strong></td><td class="n"><strong>58</strong></td></tr>
+      </tbody>
+    </table>
+    <p>The 350 “missing image” rows are mostly (a) VIA project dumps that list many filenames while the folder has one frame, and (b) Cases 8–16, which contain only overlay PNGs (<span class="path">4A labels.png</span>, etc.). Overlays were <strong>never</strong> used as training images (name filter: <em>annotation</em>, <em>labels</em>, <em>スライド</em>).</p>
+
+    <h3>Patient IDs and label cleanup</h3>
+    <ul>
+      <li>Patient ID is the deepest <span class="path">CaseNN</span> / <span class="path">CaseXNN</span> path component. <span class="path">Case_08-22/Case22</span> is Case 22, not Case 8. Juntendo folders <span class="path">X12_…</span> become CaseX12.</li>
+      <li>VIA polygons are rasterized to integer masks. The typo <code>Gallbradder</code> is mapped to Gallbladder (an earlier loader dropped that class).</li>
+      <li>On overlapping polygons the write order is CBD, then cystic duct, then cystic artery, then remaining classes.</li>
+    </ul>
+    <p>Processed tree: <span class="path">data/processed/&lt;CaseID&gt;/&lt;sample&gt;/image.jpg</span> + <span class="path">annotation.json</span>. Manifest: <span class="path">data/processed/manifest.csv</span>.</p>
+    <p>Compared with the previous local set (169 frames, 3 patients) this is about <strong>2.4× frames</strong> and <strong>19× patients</strong>.</p>
+
+    <h2 id="explore">3. Dataset exploration</h2>
+    <div class="stats">
+      <div class="stat"><b>408</b><span>unique frames</span></div>
+      <div class="stat"><b>58</b><span>patients</span></div>
+      <div class="stat"><b>~5%</b><span>pixels that are CBD+CD</span></div>
+      <div class="stat"><b>79</b><span>frames with Rouvière</span></div>
+    </div>
+
+    <h3>Class presence (how many frames contain the class)</h3>
+    <table>
+      <thead><tr><th>Class</th><th class="n">Frames</th><th class="n">Share of pixels</th></tr></thead>
+      <tbody>
+        <tr><td>Background</td><td class="n">408</td><td class="n">53.3%</td></tr>
+        <tr><td>Liver edge</td><td class="n">407</td><td class="n">24.0%</td></tr>
+        <tr><td>Gallbladder</td><td class="n">393</td><td class="n">12.7%</td></tr>
+        <tr><td>Instrument</td><td class="n">348</td><td class="n">3.8%</td></tr>
+        <tr><td>Common bile duct</td><td class="n">356</td><td class="n">2.9%</td></tr>
+        <tr><td>Cystic duct</td><td class="n">390</td><td class="n">2.4%</td></tr>
+        <tr><td>Cystic artery</td><td class="n">201</td><td class="n">0.64%</td></tr>
+        <tr><td>Rouvière’s sulcus</td><td class="n">79</td><td class="n">0.15%</td></tr>
+      </tbody>
+    </table>
+    <p>Pixel mass:</p>
+    <div class="bar" title="background 53%"><i style="width:53.3%"></i></div>
+    <div class="bar" title="liver 24%"><i style="width:24.0%"></i></div>
+    <div class="bar" title="gallbladder 13%"><i style="width:12.7%"></i></div>
+    <div class="bar" title="CBD+CD 5%"><i style="width:5.3%;background:#9f1239"></i></div>
+    <p>The two ducts of interest occupy about <strong>5% of all labeled pixels</strong>. Inverse-frequency cross-entropy still spends most of its gradient on liver, gallbladder, and background.</p>
+
+    <h3>Frames per patient are badly skewed</h3>
+    <p>A handful of cases dominate: Case44 (56 frames), Case43 (45), Case41 (43), Case45 (25), Case50 (25). Many patients contribute a single frame. All later experiments therefore split <strong>by patient</strong>, not by frame, so Case43 cannot leak into both train and test.</p>
+
+    <h3>What the polygons look like</h3>
+    <p>Labels are coarse VIA polygons, not pixel-accurate tubes. CBD (green) and cystic duct (red) sit on a continuous ICG-green structure; the junction is a hard cut with no visual boundary in the photo. That is the clinical error mode, and it is also why Dice on these two classes is intrinsically hard.</p>
+    <div class="grid2">
+      <figure>
+        <img src="../processed_previews/011_Case20__2B.png" alt="Case20 processed preview: image, mask, overlay">
+        <figcaption>Case20 — three-panel preview (image | mask | overlay). Full gallery: <a href="../processed_previews/index.html">processed_previews/index.html</a> (57 patients).</figcaption>
+      </figure>
+      <figure>
+        <img src="../bile_ducts/gt_previews/003_Case21__3A.png" alt="Case21 original image and annotated mask">
+        <figcaption>Case21 (held-out test) — original | annotated mask. Green = CBD, red = cystic duct.</figcaption>
+      </figure>
+    </div>
+    <div class="grid2">
+      <figure>
+        <img src="../bile_ducts/gt_previews/006_Case33__3.png" alt="Case33 original and mask">
+        <figcaption>Case33 — CBD and CD drawn end-to-end on one fluorescent path.</figcaption>
+      </figure>
+      <figure>
+        <img src="../bile_ducts/gt_previews/010_Case48__Case48_0_07_07_precut.png" alt="Case48 original and mask">
+        <figcaption>Case48 — both ducts are tiny relative to gallbladder and liver.</figcaption>
+      </figure>
+    </div>
+    <p>Some test patients do not even have both ducts on the sampled frame (Case26: CBD only; CaseX10: CD only; CaseX13: neither on that frame). Two-column gallery: <a href="../bile_ducts/gt_previews/index.html">gt_previews/index.html</a>.</p>
+
+    <h2 id="model">4. Model and training setup</h2>
+    <p><strong>Architecture.</strong> DeepLabV3-ResNet50 from torchvision, ImageNet/COCO initialization, classifier head resized to the task’s class count. Input 512×512, ImageNet normalization.</p>
+    <p><strong>Augmentation.</strong> Horizontal/vertical flip, 90° rotations, color jitter. Duct-focused runs also crop around CBD+CD with probability 0.7 so Calot’s triangle fills the window.</p>
+    <p><strong>Optimization.</strong> Adam 1e-4, weight decay 1e-4, ReduceLROnPlateau, batch 16. Training on NVIDIA GH200 (DeltaAI, partition <span class="path">ghx4-interactive</span>).</p>
+    <p><strong>Held-out split</strong> (seed 42, patient-level, used for all comparable runs):</p>
+    <table>
+      <thead><tr><th>Subset</th><th class="n">Frames</th><th class="n">Patients</th></tr></thead>
+      <tbody>
+        <tr><td>Train</td><td class="n">260</td><td class="n">39</td></tr>
+        <tr><td>Val</td><td class="n">100</td><td class="n">9</td></tr>
+        <tr><td>Test</td><td class="n">48</td><td class="n">9</td></tr>
+      </tbody>
+    </table>
+    <p>Test patients: Case21, 26, 30, 33, 45, 48, X09, X10, X13. Val includes Case43 (45 frames), so val metrics can look unlike test.</p>
+
+    <h3>Three task heads</h3>
+    <table>
+      <thead><tr><th>Task</th><th>Classes</th><th>Loss / early stop</th></tr></thead>
+      <tbody>
+        <tr><td><code>landmarks</code></td><td>8 (bg + 7 landmarks)</td><td>Inverse-frequency CE; stop on val CE</td></tr>
+        <tr><td><code>bile-ducts</code></td><td>4 (bg, CBD, CD, other)</td><td>CE + CBD/CD Dice + CBD↔CD swap penalty; stop on duct Dice</td></tr>
+        <tr><td><code>ducts-only</code></td><td>3 (bg, CBD, CD)</td><td>Same duct loss; everything else is background</td></tr>
+      </tbody>
+    </table>
+    <p>The 4- and 3-class heads exist because we were willing to sacrifice gallbladder/liver/instrument accuracy to improve CBD vs CD.</p>
+
+    <h2 id="results">5. Experiment results</h2>
+    <p>All Dice/IoU below are <strong>per-image means, then averaged across images</strong> on the same 48-frame test set, except the first “enlarged” run which had no test holdout.</p>
+
+    <h3>5.1 Enlarged 8-class (no test split)</h3>
+    <p>Job 3063984. Train 357 / val 51 (11 patients). Best val loss at epoch 7; train loss kept falling while val rose. Val CBD Dice 0.34, CD Dice 0.17. Liver 0.82, instrument 0.65. Useful as a data-scale check, not as the reported number.</p>
+
+    <h3>5.2 8-class with held-out test — best duct scores</h3>
+    <p>Job for <span class="path">experiments/train_test</span>. Inverse-frequency CE. Early stop on val loss (~epoch 19).</p>
+    <table>
+      <thead>
+        <tr><th>Class</th><th class="n">Test IoU</th><th class="n">Test Dice</th><th class="n">Val Dice</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Liver edge</td><td class="n">0.77</td><td class="n">0.86</td><td class="n">0.76</td></tr>
+        <tr><td>Instrument</td><td class="n">0.56</td><td class="n">0.69</td><td class="n">0.55</td></tr>
+        <tr><td>Gallbladder</td><td class="n">0.43</td><td class="n">0.56</td><td class="n">0.63</td></tr>
+        <tr><td>Common bile duct</td><td class="n">0.26</td><td class="n good">0.38</td><td class="n">0.28</td></tr>
+        <tr><td>Cystic duct</td><td class="n">0.22</td><td class="n good">0.33</td><td class="n">0.31</td></tr>
+        <tr><td>Cystic artery</td><td class="n">0.14</td><td class="n">0.23</td><td class="n">0.17</td></tr>
+        <tr><td>Rouvière’s sulcus</td><td class="n">0.07</td><td class="n">0.11</td><td class="n">0.10</td></tr>
+        <tr><td><strong>Foreground mean</strong></td><td class="n">0.35</td><td class="n">0.45</td><td class="n">0.40</td></tr>
+      </tbody>
+    </table>
+    <p>Large, frequent classes are learned. The two ducts are in the right neighborhood but far from a clinical localizer. Predicted masks are thicker than the sparse expert polygons.</p>
+
+    <h3>5.3 Trading other classes for the two ducts</h3>
+    <p>Same split, same backbone. 4-class run (job 3064959) and 3-class run (job 3065146) used Dice + swap penalty and duct-centered crops; early-stop on mean CBD+CD Dice.</p>
+    <table>
+      <thead>
+        <tr><th>Setup</th><th class="n">CBD Dice</th><th class="n">CD Dice</th><th>What happened</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>8-class landmarks</td><td class="n good">0.38</td><td class="n good">0.33</td><td>Best of the three on CBD</td></tr>
+        <tr><td>4-class (CBD / CD / other)</td><td class="n bad">0.20</td><td class="n">0.30</td><td>CBD recall 0.29; pixels dumped into <em>other</em> / background</td></tr>
+        <tr><td>3-class (CBD / CD / background)</td><td class="n bad">0.20</td><td class="n">0.33</td><td>CD recovers; CBD still ~0.20; liver/GB become false-positive ducts</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      Collapsing the other landmarks did <strong>not</strong> improve CBD vs CD. Direct swaps (CBD painted as CD and vice versa) were only ~8–12% of duct pixels. The dominant error is missing the ducts entirely, or painting ICG-green liver/gallbladder as a duct once the dump class is removed.
+    </div>
+    <div class="grid2">
+      <figure>
+        <img src="../train_test/loss_curve.png" alt="8-class train and validation loss">
+        <figcaption>8-class train vs val loss. Saved checkpoint is the best val loss, not the last epoch.</figcaption>
+      </figure>
+      <figure>
+        <img src="../bile_ducts/duct_dice_curve.png" alt="4-class validation CBD+CD Dice over epochs">
+        <figcaption>4-class val CBD+CD Dice. Best ~0.33 at epoch 42 — still below 8-class test CBD Dice.</figcaption>
+      </figure>
+    </div>
+
+    <h2 id="viz">6. Visualization</h2>
+    <h3>Held-out predictions (image | ground truth | prediction)</h3>
+    <div class="grid2">
+      <figure>
+        <img src="../train_test/val_result_0_1.png" alt="8-class validation triplet">
+        <figcaption>8-class val overlay. Liver / gallbladder / instruments roughly localized; ducts thickened or merged.</figcaption>
+      </figure>
+      <figure>
+        <img src="../train_test/test_overlays/test_result_0_1.png" alt="8-class test triplet">
+        <figcaption>8-class test overlay. Same pattern on unseen patients.</figcaption>
+      </figure>
+    </div>
+    <div class="grid2">
+      <figure>
+        <img src="../bile_ducts/test_overlays/test_result_1_1.png" alt="4-class test triplet">
+        <figcaption>4-class test: dump class <em>other</em> (right) vs CBD/CD. Ducts still incomplete.</figcaption>
+      </figure>
+      <figure>
+        <img src="../ducts_only/test_overlays/test_result_0_1.png" alt="3-class test triplet">
+        <figcaption>3-class test: only CBD and CD are foreground. Background Dice looks high because almost every pixel is background.</figcaption>
+      </figure>
+    </div>
+
+    <h3>Video inference</h3>
+    <p>OpenCV is not installed on the cluster Python, so video I/O uses the <code>ffmpeg/6.1.1</code> module. Pipeline: extract JPEGs → DeepLabV3 per frame → blend mask at native 1080p → stitch MPEG-4.</p>
+    <ul>
+      <li>Source: <span class="path">chunked_video.mp4</span> (1920×1080, 59.94&nbsp;fps, 3716 frames, 62&nbsp;s)</li>
+      <li>Output: <span class="path">outputs/chunked_video_segmented.mp4</span> (same timing, 8-class overlay + legend)</li>
+      <li>Entry point: <span class="path">python scripts/infer.py --video chunked_video.mp4 --task landmarks</span> or <span class="path">sbatch scripts/infer.sbatch</span></li>
+    </ul>
+    <p>A 4-frame smoke test confirmed decode, overlay, and stitch before the full GPU job (3071006).</p>
+
+    <h2 id="conclude">7. Conclusions</h2>
+    <ol>
+      <li>The zip is now a single training tree of <strong>408 unique frames / 58 patients</strong>, with consistent labels and no overlay leak into the pixels.</li>
+      <li>An 8-class DeepLabV3 produces a usable coarse map of <strong>liver edge, gallbladder, and instruments</strong> (Dice 0.56–0.86 on held-out patients).</li>
+      <li>It does <strong>not</strong> yet distinguish CBD from cystic duct well enough for BDI prevention. Best test Dice: <strong>CBD 0.38, CD 0.33</strong>.</li>
+      <li>Giving up the other classes (4-class and 3-class) made CBD worse (~0.20) and did not lift CD above the 8-class number. The bottleneck is not “too many heads.”</li>
+      <li>Qualitative review of the processed masks shows why: the two ducts are small adjacent polygons on a continuous fluorescent structure, with inconsistent presence across patients, and a few cases dominating the frame count.</li>
+    </ol>
+
+    <h2 id="future">8. Future work</h2>
+    <ol>
+      <li><strong>Tighten CBD vs CD annotations</strong> at the cystic–common junction, and require both ducts on Calot-triangle frames used for training. This is the highest-leverage step; loss tweaks will not invent a boundary that is not in the labels.</li>
+      <li><strong>More patients, fewer near-duplicate frames</strong> from Case41/43/44. Prefer diverse Calot views (pre-cut, CVS, ICG and white light) over 40 frames of one clip.</li>
+      <li><strong>Boundary-aware losses</strong> (Tversky with high false-negative cost on the ducts) on top of the 8-class model rather than collapsing classes.</li>
+      <li><strong>Two-stage localization:</strong> detect Calot’s triangle, then segment ducts at higher resolution instead of 512×512 full-frame.</li>
+      <li><strong>Real-time backbone</strong> (DeepLabV3-MobileNet or a lightweight decoder) if this is meant for the laparoscopic display; current overlay is offline (~10 min for 62 s of 1080p on GH200, dominated by JPEG I/O).</li>
+      <li><strong>Clinical review</strong> of video overlays with a surgeon: false CBD on liver/ICG glow is more dangerous than a missed Rouvière.</li>
+    </ol>
+
+    <footer>
+      Project path: /projects/bbka/shirui/cystic_segmentation · Repo: github.com/siriluo/cystic_segmentation · This page: experiments/report/index.html · Print to PDF from the browser if a typeset copy is needed.
+    </footer>
+  </div>
+</body>
+</html>

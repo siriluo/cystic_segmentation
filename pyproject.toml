@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cystic-segmentation"
+version = "0.1.0"
+description = "Deep learning segmentation of anatomical landmarks in laparoscopic cholecystectomy"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{name = "siriluo"}]
+dependencies = [
+    "torch",
+    "torchvision",
+    "numpy",
+    "Pillow",
+    "opencv-python",
+    "matplotlib",
+    "tqdm",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["ipykernel", "jupyter"]
+
+[tool.setuptools.packages.find]
+include = ["cystic_seg*"]

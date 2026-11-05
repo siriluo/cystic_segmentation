@@ -1,0 +1,72 @@
+{
+  "n_batches": 48,
+  "n_images": 48,
+  "mean_iou": 0.3779631577430092,
+  "foreground_miou": 0.3507339671370246,
+  "mean_dice": 0.4829873362705924,
+  "foreground_mdice": 0.4518838662694153,
+  "per_class": [
+    {
+      "id": 0,
+      "name": "background",
+      "iou": 0.5685674919849014,
+      "dice": 0.7007116262788325
+    },
+    {
+      "id": 1,
+      "name": "Gallbladder",
+      "iou": 0.4298519352489703,
+      "dice": 0.5607375582287619
+    },
+    {
+      "id": 2,
+      "name": "Common bile duct",
+      "iou": 0.26256380964380605,
+      "dice": 0.3800850861442417
+    },
+    {
+      "id": 3,
+      "name": "Cystic duct",
+      "iou": 0.22464503695285992,
+      "dice": 0.33211983335290984
+    },
+    {
+      "id": 4,
+      "name": "Instrument",
+      "iou": 0.5605887247262493,
+      "dice": 0.690326082124149
+    },
+    {
+      "id": 5,
+      "name": "Liver edge",
+      "iou": 0.7657600249725762,
+      "dice": 0.8635447873746434
+    },
+    {
+      "id": 6,
+      "name": "Cystic artery",
+      "iou": 0.13753113581743057,
+      "dice": 0.2263288477795925
+    },
+    {
+      "id": 7,
+      "name": "Rouvi\u00e8re's sulcus",
+      "iou": 0.07419710259727982,
+      "dice": 0.11004486888160864
+    }
+  ],
+  "subset": "test",
+  "split_json": "/projects/bbka/shirui/cystic_segmentation/experiments/train_test/split.json",
+  "n_cases": 9,
+  "cases": [
+    "Case21",
+    "Case26",
+    "Case30",
+    "Case33",
+    "Case45",
+    "Case48",
+    "CaseX09",
+    "CaseX10",
+    "CaseX13"
+  ]
+}

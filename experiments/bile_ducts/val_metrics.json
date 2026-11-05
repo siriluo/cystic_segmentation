@@ -1,0 +1,81 @@
+{
+  "n_batches": 100,
+  "n_images": 100,
+  "mean_iou": 0.41936302834070716,
+  "foreground_miou": 0.3397465710527506,
+  "mean_dice": 0.542113874336466,
+  "foreground_mdice": 0.46034348007800685,
+  "per_class": [
+    {
+      "id": 0,
+      "name": "background",
+      "iou": 0.6582124002045769,
+      "dice": 0.7874250571118434
+    },
+    {
+      "id": 1,
+      "name": "Common bile duct",
+      "iou": 0.1809273503749976,
+      "dice": 0.278356524818757
+    },
+    {
+      "id": 2,
+      "name": "Cystic duct",
+      "iou": 0.26252701507738013,
+      "dice": 0.3853526257691169
+    },
+    {
+      "id": 3,
+      "name": "other",
+      "iou": 0.575785347705874,
+      "dice": 0.7173212896461467
+    }
+  ],
+  "confusion": [
+    [
+      10953629,
+      1248643,
+      256716,
+      1901084
+    ],
+    [
+      68920,
+      467883,
+      59770,
+      145028
+    ],
+    [
+      43358,
+      72798,
+      402795,
+      276946
+    ],
+    [
+      2151990,
+      597590,
+      256581,
+      7310669
+    ]
+  ],
+  "swap_rates": {
+    "cbd_recall": 0.630909343434003,
+    "cd_recall": 0.5060893557834745,
+    "cbd_predicted_as_cd": 0.08059589995159122,
+    "cd_predicted_as_cbd": 0.09146660937282086
+  },
+  "subset": "val",
+  "task": "bile-ducts",
+  "split_json": "/projects/bbka/shirui/cystic_segmentation/experiments/bile_ducts/split.json",
+  "n_cases": 9,
+  "cases": [
+    "Case04",
+    "Case19",
+    "Case29",
+    "Case31",
+    "Case42",
+    "Case43",
+    "Case47",
+    "Case53",
+    "CaseX03"
+  ]
+}
