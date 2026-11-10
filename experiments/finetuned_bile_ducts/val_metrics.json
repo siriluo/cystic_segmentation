@@ -1,0 +1,140 @@
+{
+  "n_batches": 100,
+  "n_images": 100,
+  "mean_iou": 0.39377294267768814,
+  "foreground_miou": 0.3172842417802177,
+  "mean_dice": 0.5146667179639999,
+  "foreground_mdice": 0.4325024782696118,
+  "per_class": [
+    {
+      "id": 0,
+      "name": "background",
+      "iou": 0.6232390453700993,
+      "dice": 0.761159437047164
+    },
+    {
+      "id": 1,
+      "name": "Common bile duct",
+      "iou": 0.1515760206673361,
+      "dice": 0.23712316672550274
+    },
+    {
+      "id": 2,
+      "name": "Cystic duct",
+      "iou": 0.23172135493202523,
+      "dice": 0.3444016675579795
+    },
+    {
+      "id": 3,
+      "name": "other",
+      "iou": 0.5685553497412917,
+      "dice": 0.7159826005253531
+    }
+  ],
+  "confusion": [
+    [
+      10496115,
+      1283853,
+      571810,
+      2008294
+    ],
+    [
+      71910,
+      331238,
+      186190,
+      152263
+    ],
+    [
+      41962,
+      54145,
+      504534,
+      195256
+    ],
+    [
+      2291949,
+      253279,
+      467174,
+      7304428
+    ]
+  ],
+  "swap_rates": {
+    "cbd_recall": 0.4466525800261866,
+    "cd_recall": 0.6339187105869227,
+    "cbd_predicted_as_cd": 0.251064925748482,
+    "cd_predicted_as_cbd": 0.06803015968146632
+  },
+  "subset": "val",
+  "task": "bile-ducts",
+  "split": {
+    "unit": "case",
+    "seed": 42,
+    "val_ratio": 0.15,
+    "test_ratio": 0.15,
+    "n_train": 260,
+    "n_val": 100,
+    "n_test": 48,
+    "train_cases": [
+      "Case01",
+      "Case02",
+      "Case03",
+      "Case05",
+      "Case06",
+      "Case07",
+      "Case17",
+      "Case18",
+      "Case20",
+      "Case22",
+      "Case23",
+      "Case24",
+      "Case25",
+      "Case27",
+      "Case28",
+      "Case32",
+      "Case34",
+      "Case35",
+      "Case36",
+      "Case39",
+      "Case40",
+      "Case41",
+      "Case44",
+      "Case46",
+      "Case49",
+      "Case50",
+      "Case51",
+      "Case52",
+      "Case54",
+      "CaseX01",
+      "CaseX02",
+      "CaseX04",
+      "CaseX05",
+      "CaseX06",
+      "CaseX07",
+      "CaseX08",
+      "CaseX11",
+      "CaseX12",
+      "CaseX14"
+    ],
+    "val_cases": [
+      "Case04",
+      "Case19",
+      "Case29",
+      "Case31",
+      "Case42",
+      "Case43",
+      "Case47",
+      "Case53",
+      "CaseX03"
+    ],
+    "test_cases": [
+      "Case21",
+      "Case26",
+      "Case30",
+      "Case33",
+      "Case45",
+      "Case48",
+      "CaseX09",
+      "CaseX10",
+      "CaseX13"
+    ]
+  }
+}

@@ -35,6 +35,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-root", type=str, default="data/processed")
     parser.add_argument("--experiment-dir", type=str, default="experiments/train_test")
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to save/load best weights")
+    parser.add_argument(
+        "--pretrained-checkpoint",
+        type=str,
+        default=None,
+        help="Path to pretrained checkpoint (e.g. from CholecSeg8k pretraining) to initialize backbone/weights",
+    )
     parser.add_argument("--split-json", type=str, default=None, help="Reuse a split from scripts/make_splits.py")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--epochs", type=int, default=50)
@@ -67,6 +73,29 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="For bile-ducts, ignore the dump class in CE so GB/liver/instrument pixels do not drive the loss.",
     )
+    parser.add_argument(
+        "--freeze-backbone-epochs",
+        type=int,
+        default=0,
+        help="Number of initial epochs to freeze backbone and train only the head",
+    )
+    parser.add_argument(
+        "--backbone-lr",
+        type=float,
+        default=None,
+        help="Learning rate for backbone once unfrozen (default: same as --lr)",
+    )
+    parser.add_argument(
+        "--monitor",
+        choices=["val-loss", "duct-dice"],
+        default=None,
+        help="Metric to monitor for early stopping (default: duct-dice for duct tasks, val-loss otherwise)",
+    )
+    parser.add_argument(
+        "--use-duct-loss",
+        action="store_true",
+        help="Force BileDuctLoss (CBD/CD Dice + swap penalty) even on landmarks task",
+    )
     return parser.parse_args()
 
 
@@ -97,8 +126,8 @@ def main() -> None:
     class_names = spec.class_names
     duct_crop_prob = args.duct_crop_prob
     if duct_crop_prob is None:
-        duct_crop_prob = 0.7 if spec.duct_focus else 0.0
-    monitor = "duct-dice" if spec.duct_focus else "val-loss"
+        duct_crop_prob = 0.7 if (spec.duct_focus or args.use_duct_loss) else 0.0
+    monitor = args.monitor or ("duct-dice" if (spec.duct_focus or args.use_duct_loss) else "val-loss")
 
     samples = load_data_with_masks(args.data_root)
     if not samples:
@@ -164,6 +193,13 @@ def main() -> None:
     )
 
     model = build_deeplabv3(num_classes=num_classes, pretrained=True).to(device)
+    if args.pretrained_checkpoint:
+        if os.path.exists(args.pretrained_checkpoint):
+            print(f"Loading pretrained weights from: {args.pretrained_checkpoint}")
+            load_checkpoint(model, args.pretrained_checkpoint, device)
+        else:
+            print(f"Warning: Pretrained checkpoint '{args.pretrained_checkpoint}' not found. Using default weights.")
+
     weights = None
     if args.class_weights:
         counts = class_counts(train_samples, num_classes, remap=spec.remap)
@@ -176,7 +212,7 @@ def main() -> None:
             weights = weights / weights.mean()
         print("Class weights:", {class_names[i]: float(weights[i]) for i in range(num_classes)})
 
-    if spec.duct_focus:
+    if spec.duct_focus or args.use_duct_loss:
         criterion = BileDuctLoss(
             class_weights=weights,
             cbd_id=spec.cbd_id,
@@ -189,7 +225,39 @@ def main() -> None:
         criterion = nn.CrossEntropyLoss(weight=weights)
     else:
         criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+
+    best_loss = float("inf")
+    best_duct_dice = -1.0
+    start_epoch = 0
+    extra = {}
+    if args.resume and os.path.exists(checkpoint_path):
+        print(f"Resuming from checkpoint: {checkpoint_path}")
+        extra = load_checkpoint(model, checkpoint_path, device)
+        best_loss = float(extra.get("best_loss", best_loss))
+        best_duct_dice = float(extra.get("best_duct_dice", best_duct_dice))
+        start_epoch = int(extra.get("epoch", 0))
+
+    is_frozen = args.freeze_backbone_epochs > 0 and start_epoch < args.freeze_backbone_epochs
+    if is_frozen:
+        print(f"Freezing backbone for the first {args.freeze_backbone_epochs} epochs (training head only).")
+        for p in model.backbone.parameters():
+            p.requires_grad = False
+        trainable_params = [p for p in model.parameters() if p.requires_grad]
+        optimizer = optim.Adam(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
+    else:
+        bb_lr = args.backbone_lr if args.backbone_lr is not None else args.lr
+        if bb_lr != args.lr:
+            print(f"Using differential LR: backbone={bb_lr}, classifier={args.lr}")
+            optimizer = optim.Adam([
+                {"params": model.backbone.parameters(), "lr": bb_lr},
+                {"params": model.classifier.parameters(), "lr": args.lr},
+            ], weight_decay=args.weight_decay)
+        else:
+            optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+
+    if args.resume and os.path.exists(checkpoint_path) and extra.get("optimizer"):
+        optimizer.load_state_dict(extra["optimizer"])
+
     sched_mode = "max" if monitor == "duct-dice" else "min"
     try:
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -200,18 +268,6 @@ def main() -> None:
             optimizer, mode=sched_mode, patience=5, factor=0.5
         )
 
-    best_loss = float("inf")
-    best_duct_dice = -1.0
-    start_epoch = 0
-    if args.resume and os.path.exists(checkpoint_path):
-        print(f"Resuming from checkpoint: {checkpoint_path}")
-        extra = load_checkpoint(model, checkpoint_path, device)
-        if extra.get("optimizer"):
-            optimizer.load_state_dict(extra["optimizer"])
-        best_loss = float(extra.get("best_loss", best_loss))
-        best_duct_dice = float(extra.get("best_duct_dice", best_duct_dice))
-        start_epoch = int(extra.get("epoch", 0))
-
     train_losses = []
     val_losses = []
     duct_dices = []
@@ -220,6 +276,25 @@ def main() -> None:
 
     with open(log_path, "w") as log_file:
         for epoch in range(start_epoch, args.epochs):
+            if is_frozen and epoch >= args.freeze_backbone_epochs:
+                print(f"Unfreezing backbone at epoch {epoch + 1}.")
+                for p in model.backbone.parameters():
+                    p.requires_grad = True
+                is_frozen = False
+                bb_lr = args.backbone_lr if args.backbone_lr is not None else args.lr
+                optimizer = optim.Adam([
+                    {"params": model.backbone.parameters(), "lr": bb_lr},
+                    {"params": model.classifier.parameters(), "lr": args.lr},
+                ], weight_decay=args.weight_decay)
+                try:
+                    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                        optimizer, mode=sched_mode, patience=5, factor=0.5, verbose=True
+                    )
+                except TypeError:
+                    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                        optimizer, mode=sched_mode, patience=5, factor=0.5
+                    )
+
             model.train()
             running_loss = 0.0
             for images, masks in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{args.epochs} train"):

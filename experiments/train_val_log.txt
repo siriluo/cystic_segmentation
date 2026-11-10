@@ -1,10 +1,29 @@
-Epoch 1/50, Train Loss: 0.1025, Val Loss: 0.1967, LR: 0.000100
-Epoch 2/50, Train Loss: 0.0962, Val Loss: 0.1902, LR: 0.000100
-Epoch 3/50, Train Loss: 0.1062, Val Loss: 0.1938, LR: 0.000100
-Epoch 4/50, Train Loss: 0.0941, Val Loss: 0.2017, LR: 0.000100
-Epoch 5/50, Train Loss: 0.0940, Val Loss: 0.1925, LR: 0.000100
-Epoch 6/50, Train Loss: 0.0917, Val Loss: 0.1966, LR: 0.000100
-Epoch 7/50, Train Loss: 0.0885, Val Loss: 0.1825, LR: 0.000100
-Epoch 8/50, Train Loss: 0.0889, Val Loss: 0.2047, LR: 0.000100
-Epoch 9/50, Train Loss: 0.0884, Val Loss: 0.1973, LR: 0.000100
-Epoch 10/50, Train Loss: 0.0872, Val Loss: 0.1902, LR: 0.000100
+Epoch 1/50, Train Loss: 1.6943, Val Loss: 1.5875, Val CBD+CD Dice: 0.0007, LR: 0.000100
+Epoch 2/50, Train Loss: 1.1933, Val Loss: 1.3552, Val CBD+CD Dice: 0.0000, LR: 0.000100
+Epoch 3/50, Train Loss: 0.9373, Val Loss: 0.9352, Val CBD+CD Dice: 0.0000, LR: 0.000100
+Epoch 4/50, Train Loss: 0.8446, Val Loss: 0.9576, Val CBD+CD Dice: 0.0017, LR: 0.000100
+Epoch 5/50, Train Loss: 0.7499, Val Loss: 0.8768, Val CBD+CD Dice: 0.0632, LR: 0.000100
+Epoch 6/50, Train Loss: 0.7077, Val Loss: 0.7790, Val CBD+CD Dice: 0.1082, LR: 0.000100
+Epoch 7/50, Train Loss: 0.6418, Val Loss: 0.7129, Val CBD+CD Dice: 0.0458, LR: 0.000100
+Epoch 8/50, Train Loss: 0.6045, Val Loss: 0.7593, Val CBD+CD Dice: 0.1832, LR: 0.000100
+Epoch 9/50, Train Loss: 0.5814, Val Loss: 0.7483, Val CBD+CD Dice: 0.0844, LR: 0.000100
+Epoch 10/50, Train Loss: 0.5339, Val Loss: 0.6780, Val CBD+CD Dice: 0.1500, LR: 0.000100
+Epoch 11/50, Train Loss: 0.5156, Val Loss: 0.6630, Val CBD+CD Dice: 0.1068, LR: 0.000100
+Epoch 12/50, Train Loss: 0.4828, Val Loss: 0.6674, Val CBD+CD Dice: 0.2047, LR: 0.000100
+Epoch 13/50, Train Loss: 0.4650, Val Loss: 0.6265, Val CBD+CD Dice: 0.2390, LR: 0.000100
+Epoch 14/50, Train Loss: 0.4358, Val Loss: 0.6023, Val CBD+CD Dice: 0.2701, LR: 0.000100
+Epoch 15/50, Train Loss: 0.4292, Val Loss: 0.6223, Val CBD+CD Dice: 0.2835, LR: 0.000100
+Epoch 16/50, Train Loss: 0.4275, Val Loss: 0.6257, Val CBD+CD Dice: 0.1924, LR: 0.000100
+Epoch 17/50, Train Loss: 0.4089, Val Loss: 0.6029, Val CBD+CD Dice: 0.2730, LR: 0.000100
+Epoch 18/50, Train Loss: 0.3936, Val Loss: 0.6081, Val CBD+CD Dice: 0.2772, LR: 0.000100
+Epoch 19/50, Train Loss: 0.3856, Val Loss: 0.5453, Val CBD+CD Dice: 0.2778, LR: 0.000100
+Epoch 20/50, Train Loss: 0.3722, Val Loss: 0.5969, Val CBD+CD Dice: 0.3353, LR: 0.000100
+Epoch 21/50, Train Loss: 0.3635, Val Loss: 0.6066, Val CBD+CD Dice: 0.2036, LR: 0.000100
+Epoch 22/50, Train Loss: 0.3635, Val Loss: 0.5519, Val CBD+CD Dice: 0.3309, LR: 0.000100
+Epoch 23/50, Train Loss: 0.3458, Val Loss: 0.6172, Val CBD+CD Dice: 0.2825, LR: 0.000100
+Epoch 24/50, Train Loss: 0.3207, Val Loss: 0.5756, Val CBD+CD Dice: 0.2851, LR: 0.000100
+Epoch 25/50, Train Loss: 0.3282, Val Loss: 0.5909, Val CBD+CD Dice: 0.2571, LR: 0.000100
+Epoch 26/50, Train Loss: 0.3095, Val Loss: 0.5699, Val CBD+CD Dice: 0.2930, LR: 0.000050
+Epoch 27/50, Train Loss: 0.2941, Val Loss: 0.5886, Val CBD+CD Dice: 0.2912, LR: 0.000050
+Epoch 28/50, Train Loss: 0.2849, Val Loss: 0.5777, Val CBD+CD Dice: 0.2699, LR: 0.000050
+Epoch 29/50, Train Loss: 0.2761, Val Loss: 0.5767, Val CBD+CD Dice: 0.3161, LR: 0.000050

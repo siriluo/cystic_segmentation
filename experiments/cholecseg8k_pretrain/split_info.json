@@ -1,0 +1,5 @@
+{
+  "train_samples": 7040,
+  "val_samples": 1040,
+  "seed": 42
+}

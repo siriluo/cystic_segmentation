@@ -1,0 +1,1 @@
+Epoch 1/1, Train Loss: 3.3640, Val Loss: 3.4140, Val CBD+CD Dice: 0.1029, LR: 0.000100

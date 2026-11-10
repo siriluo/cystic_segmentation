@@ -46,10 +46,25 @@ def load_checkpoint(
     if isinstance(ckpt, dict) and "model" in ckpt:
         state = ckpt["model"]
         extra = ckpt
+    elif isinstance(ckpt, dict) and "backbone" in ckpt:
+        state = {f"backbone.{k}": v for k, v in ckpt["backbone"].items()}
+        extra = ckpt
     else:
         state = ckpt
 
-    model.load_state_dict(state, strict=False)
+    model_state = model.state_dict()
+    filtered_state = {}
+    ignored_keys = []
+    for k, v in state.items():
+        if k in model_state and model_state[k].shape == v.shape:
+            filtered_state[k] = v
+        else:
+            ignored_keys.append(k)
+
+    if ignored_keys:
+        print(f"load_checkpoint: matched {len(filtered_state)} keys, skipped {len(ignored_keys)} mismatched/unused keys (e.g. {ignored_keys[:3]})")
+
+    model.load_state_dict(filtered_state, strict=False)
     return extra
 
 
